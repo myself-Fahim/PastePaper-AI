@@ -1,36 +1,127 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# PastPaper AI
 
-## Getting Started
+PastPaper AI turns previous exam papers into a focused study plan, explanations, learning resources, and interactive practice quizzes.
 
-First, run the development server:
+## What it solves
+
+Students often have past papers but no simple way to identify repeated topics, prioritize revision, understand difficult concepts, or measure their preparation. PastPaper AI analyzes past questions for a specific subject and converts them into practical study guidance.
+
+## Features
+
+### Past-paper analysis
+
+Enter a subject name, upload a PDF, or paste exam questions. The system identifies recurring topics, frequency, available years, priority levels, study plans, and practice questions.
+
+### Scanned PDF support
+
+Text-based PDFs are processed with PDF.js. Scanned or image-only PDFs automatically use OCR through Tesseract.js, so students do not need to type every question manually.
+
+### Subject matching
+
+The system checks whether the entered subject matches the supplied exam material. A mismatch returns a clear error instead of producing unrelated analysis.
+
+### Topic prioritization
+
+- **A:** strongest historical evidence or repetition
+- **B:** moderate evidence
+- **C:** limited evidence
+
+Priorities are study guidance, not guaranteed predictions.
+
+### Four explanation modes
+
+Each topic can be explained as:
+
+- **Beginner explanation:** step-by-step plain-language teaching with examples
+- **Exam-ready answer:** structured, moderately elaborate answer for written exams
+- **One-minute revision:** compact high-yield summary
+- **Memory trick:** mnemonic, analogy, or association for recall
+
+### Related resources
+
+Each topic has individual learning resources. The system uses valid AI-provided HTTPS links when available and provides topic-specific Google and YouTube learning searches as a fallback.
+
+### Interactive practice quiz
+
+After analysis, students can generate subject-specific MCQs and short-answer questions, select or type answers, submit the quiz, and review explanations. Correct selected answers are highlighted green and incorrect selected answers red.
+
+## Student workflow
+
+1. Enter the exact subject name.
+2. Upload a PDF or paste at least 30 characters of questions.
+3. Select **Analyze Papers**.
+4. Review topic frequency, years, priorities, study plans, and practice questions.
+5. Open **Explain this topic in different ways** and select an explanation mode.
+6. Open the resources listed for each topic.
+7. Select **Generate Practice Quiz**.
+8. Submit answers and review mistakes, correct answers, and explanations.
+
+## Technology
+
+- Next.js 16 App Router, React 19, and TypeScript
+- Tailwind CSS and Lucide React
+- Ollama Cloud for analysis and quiz generation
+- PDF.js for selectable text extraction
+- Tesseract.js and `@napi-rs/canvas` for scanned-PDF OCR
+
+## Getting started
+
+### Requirements
+
+- Node.js 20 or newer
+- Ollama Cloud API key
+- An Ollama model that supports JSON responses
+
+### Installation
+
+```bash
+npm install
+```
+
+Create `.env.local`:
+
+```env
+OLLAMA_API_KEY=your_ollama_api_key
+OLLAMA_MODEL=your_model_name
+```
+
+Start the app:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Scripts
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run dev       # Development server
+npm run build     # Production build
+npm run start     # Production server
+npm run lint      # ESLint
+npx tsc --noEmit  # TypeScript validation
+```
 
-## Learn More
+## API routes
 
-To learn more about Next.js, take a look at the following resources:
+- `POST /api/analyze` — extracts content, performs OCR when needed, validates the subject, and generates topic analysis.
+- `POST /api/practice` — generates a practice quiz from the analyzed material.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Project structure
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```text
+app/
+├── api/analyze/route.ts     # Extraction, OCR, validation, and analysis
+├── api/practice/route.ts    # Practice quiz generation
+├── page.tsx                 # Main student interface
+└── layout.tsx               # Application layout
+```
 
-## Deploy on Vercel
+## Limitations
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+OCR quality depends on scan quality. AI results depend on the supplied papers and selected model. Priorities are not guaranteed predictions, and students should verify external resources before relying on them.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## License
+
+This project is intended for educational and hackathon use. Add a project-specific license before public distribution.

@@ -286,14 +286,14 @@ export default function Home() {
                 id="subject"
                 value={subject}
                 onChange={(event) => setSubject(event.target.value)}
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-sm outline-none transition focus:border-emerald-400 focus:bg-white focus:ring-2 focus:ring-emerald-400/10"
+                className="w-full rounded-xl border-2 border-slate-200 bg-white px-4 py-3.5 text-sm font-medium outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10"
               />
             </div>
 
             {/* PDF Upload */}
             <div>
               <label className="mb-2 block text-sm font-medium text-slate-700">
-                Upload exam papers
+                <span className="font-semibold text-slate-800">Upload exam papers</span>
                 <span className="ml-2 font-normal text-slate-600">
                   (Optional)
                 </span>
@@ -303,7 +303,7 @@ export default function Home() {
                 className={`flex cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed px-5 py-8 text-center transition ${
                   file
                     ? "border-violet-400/50 bg-violet-400/[0.06]"
-                    : "border-slate-300 bg-slate-50 hover:border-emerald-400 hover:bg-emerald-50/50"
+                    : "border-2 border-dashed border-slate-300 bg-slate-50 hover:border-emerald-500 hover:bg-emerald-50"
                 }`}
               >
                 {file ? (
@@ -370,7 +370,7 @@ export default function Home() {
                   htmlFor="questions"
                 className="text-sm font-medium text-slate-700"
                 >
-                  Paste exam questions
+                <span className="font-semibold text-slate-800">Paste exam questions</span>
                 </label>
 
                 <span className="text-xs text-slate-500">
@@ -389,7 +389,7 @@ export default function Home() {
                   setQuestionText(event.target.value)
                 }
                 rows={9}
-                className="w-full resize-y rounded-xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm leading-7 outline-none transition focus:border-emerald-400 focus:bg-white focus:ring-2 focus:ring-emerald-400/10"
+                className="w-full resize-y rounded-xl border-2 border-slate-200 bg-white px-4 py-4 text-sm leading-7 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10"
               />
 
               <p className="mt-2 text-xs text-slate-600">
@@ -421,7 +421,7 @@ export default function Home() {
                 !subject.trim() ||
                 (!file && questionText.trim().length < 30)
               }
-              className="flex w-full items-center justify-center gap-3 rounded-xl bg-emerald-600 px-5 py-4 text-sm font-semibold text-white shadow-lg shadow-emerald-600/20 transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex w-full items-center justify-center gap-3 rounded-xl bg-slate-900 px-5 py-4 text-sm font-semibold text-white shadow-lg shadow-slate-900/15 transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {loading ? (
                 <>
@@ -619,8 +619,9 @@ export default function Home() {
                 </div>
 
                 {resourcesForTopic(topic).length ? (
-                  <div className="mt-6 border-t border-slate-100 pt-5">
-                    <h4 className="text-sm font-semibold text-teal-700">
+                  <div className="hidden">
+                    <h4 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-teal-800">
+                      <span className="h-2 w-2 rounded-full bg-teal-500" />
                       Related learning resources
                     </h4>
                     <div className="mt-3 grid gap-2 sm:grid-cols-2">
@@ -631,7 +632,7 @@ export default function Home() {
                           href={resource.url}
                           target="_blank"
                           rel="noreferrer"
-                          className="rounded-xl border border-slate-200 bg-slate-50 p-3 transition hover:border-emerald-300 hover:bg-emerald-50"
+                          className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-teal-400 hover:bg-teal-50 hover:shadow-md"
                         >
                           <span className="block text-sm font-semibold text-slate-800">
                             {resource.title}
@@ -649,14 +650,20 @@ export default function Home() {
                 ) : null}
 
                 {/* Model Answer */}
-                <div className="mt-6 border-t border-white/[0.08] pt-5">
+                <div className="mt-7 rounded-2xl border-2 border-emerald-200 bg-gradient-to-br from-emerald-50 via-white to-cyan-50 p-4 shadow-sm sm:p-5">
                   <button
                     onClick={() => toggleAnswer(index)}
                     className="flex w-full items-center justify-between gap-4 text-left"
                     aria-expanded={expandedAnswers.includes(index)}
                   >
-                    <span className="text-sm font-semibold text-slate-700">
-                      Explain this topic
+                    <span>
+                      <span className="flex items-center gap-2 text-base font-bold text-emerald-900">
+                        <Brain size={18} className="text-emerald-600" />
+                        Explain this topic in different ways
+                      </span>
+                      <span className="mt-1 block text-xs font-medium text-slate-600">
+                        Choose the explanation style that helps you learn fastest.
+                      </span>
                     </span>
 
                     <ChevronDown
@@ -670,7 +677,7 @@ export default function Home() {
                   </button>
 
                   {expandedAnswers.includes(index) && (
-                    <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
+                    <div className="mt-4 rounded-xl border border-emerald-200 bg-white p-4 shadow-sm">
                       <div className="mb-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
                         {[
                           ["beginner", "Beginner explanation"],
@@ -682,7 +689,7 @@ export default function Home() {
                             key={mode}
                             type="button"
                             onClick={() => setExplanationMode({ ...explanationMode, [index]: mode })}
-                            className={`rounded-lg border px-3 py-2 text-xs font-semibold transition ${
+                            className={`rounded-lg border px-3 py-2 text-xs font-bold transition ${
                               (explanationMode[index] ?? "examReady") === mode
                                 ? "border-emerald-400 bg-emerald-100 text-emerald-800"
                                 : "border-slate-200 bg-white text-slate-600 hover:border-emerald-300"
@@ -701,6 +708,25 @@ export default function Home() {
                     </div>
                   )}
                 </div>
+
+                {resourcesForTopic(topic).length ? (
+                  <div className="mt-6 border-t border-slate-100 pt-5">
+                    <h4 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-teal-800">
+                      <span className="h-2 w-2 rounded-full bg-teal-500" />
+                      Related learning resources
+                    </h4>
+                    <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                      {resourcesForTopic(topic).map((resource, resourceIndex) => (
+                        resource.url.startsWith("https://") && (
+                          <a key={`${resource.url}-${resourceIndex}`} href={resource.url} target="_blank" rel="noreferrer" className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-teal-400 hover:bg-teal-50 hover:shadow-md">
+                            <span className="block text-sm font-semibold text-slate-800">{resource.title}</span>
+                            {resource.source && <span className="mt-1 block text-xs text-slate-600">{resource.source}</span>}
+                          </a>
+                        )
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
               </article>
             ))}
 
@@ -712,10 +738,10 @@ export default function Home() {
               </div>
             )}
 
-            <div className="rounded-2xl border border-emerald-200 bg-white p-6 shadow-sm">
+            <div className="rounded-2xl border-2 border-emerald-200 bg-emerald-50/70 p-6 shadow-sm">
               <h3 className="text-lg font-semibold text-slate-800">Ready to test your knowledge?</h3>
               <p className="mt-2 text-sm text-slate-600">Generate a subject-specific practice quiz from these past-paper topics.</p>
-              <button type="button" onClick={generatePracticeQuiz} disabled={quizLoading} className="mt-5 flex w-full items-center justify-center gap-3 rounded-xl bg-emerald-600 px-5 py-4 text-sm font-semibold text-white shadow-lg shadow-emerald-600/20 transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-50">
+              <button type="button" onClick={generatePracticeQuiz} disabled={quizLoading} className="mt-5 flex w-full items-center justify-center gap-3 rounded-xl bg-slate-900 px-5 py-4 text-sm font-semibold text-white shadow-lg shadow-slate-900/15 transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50">
                 {quizLoading ? <LoaderCircle size={17} className="animate-spin" /> : <GraduationCap size={17} />}
                 {quizLoading ? "Generating practice quiz..." : "Generate Practice Quiz"}
               </button>
