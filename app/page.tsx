@@ -41,9 +41,7 @@ type Analysis = {
 type QuizQuestion = { question: string; options: string[]; answer: number | string; explanation: string };
 
 export default function Home() {
-  const [subject, setSubject] = useState(
-    "Database Management Systems"
-  );
+  const [subject, setSubject] = useState("");
   const [questionText, setQuestionText] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [analysis, setAnalysis] = useState<Analysis | null>(null);
@@ -286,6 +284,8 @@ export default function Home() {
                 id="subject"
                 value={subject}
                 onChange={(event) => setSubject(event.target.value)}
+                placeholder="Choose your subject"
+                required
                 className="w-full rounded-xl border-2 border-slate-200 bg-white px-4 py-3.5 text-sm font-medium outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10"
               />
             </div>
