@@ -46,6 +46,7 @@ export default function Home() {
   const [file, setFile] = useState<File | null>(null);
   const [analysis, setAnalysis] = useState<Analysis | null>(null);
   const [loading, setLoading] = useState(false);
+  const [loadingStage, setLoadingStage] = useState("Analyzing your papers...");
   const [error, setError] = useState("");
   const [expandedAnswers, setExpandedAnswers] = useState<number[]>([]);
   const [explanationMode, setExplanationMode] = useState<Record<number, string>>({});
@@ -105,8 +106,16 @@ export default function Home() {
       formData.append("questionText", questionText);
 
       if (file) {
-        formData.append("file", file);
+        setLoadingStage("Extracting text from your PDF...");
+        const extractData = new FormData();
+        extractData.append("file", file);
+        const extractResponse = await fetch("/api/extract", { method: "POST", body: extractData });
+        const extracted = await extractResponse.json();
+        if (!extractResponse.ok) throw new Error(extracted.error || "Could not extract text from the PDF.");
+        formData.set("questionText", extracted.extractedText);
       }
+
+      setLoadingStage("Generating your study insights...");
 
       const response = await fetch("/api/analyze", {
         method: "POST",
@@ -140,12 +149,15 @@ export default function Home() {
       setSourceText(data.extractedText || questionText);
     } catch (err) {
       setError(
-        err instanceof Error
+        err instanceof DOMException && err.name === "TimeoutError"
+          ? "The request took too long on the deployed server. Try a text-based PDF or paste the questions directly."
+          : err instanceof Error
           ? err.message
           : "Something went wrong. Please try again."
       );
     } finally {
       setLoading(false);
+      setLoadingStage("Analyzing your papers...");
     }
   }
 
@@ -429,7 +441,7 @@ export default function Home() {
                     size={19}
                     className="animate-spin"
                   />
-                  Analyzing your papers...
+                  {loadingStage}
                 </>
               ) : (
                 <>

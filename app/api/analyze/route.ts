@@ -9,6 +9,10 @@ import {
     getDocument,
 } from "pdfjs-dist/legacy/build/pdf.mjs";
 
+// Scanned PDFs require OCR before the AI request. Allow enough time on
+// deployments that support extended Vercel function durations.
+export const maxDuration = 300;
+
 // This route always runs on Node. PDF.js otherwise uses its browser default
 // (`./pdf.worker.mjs`), which Next tries to resolve from its generated chunks.
 // Point it at the worker shipped in node_modules instead.
