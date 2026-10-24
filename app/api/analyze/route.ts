@@ -202,32 +202,46 @@ Subject: ${subject.trim()}
 Extracted past exam questions:
 ${extractedText.slice(0, 20000)}
 
-Analyze only the supplied evidence.
+Your job is to produce a careful, detailed, exam-focused analysis. Analyze only the supplied evidence; do not use general assumptions to claim that a topic appeared in the papers.
 
 Return a JSON object:
 {
-  "summary": "Brief analysis summary",
+  "summary": "A detailed 2-4 sentence summary of the exam pattern, recurring concepts, question style, and the most important preparation priorities",
   "topics": [
     {
       "name": "Topic name",
       "frequency": 1,
       "years": [],
       "category": "A",
-      "reason": "Evidence-based explanation",
-      "studyPlan": ["Step 1", "Step 2"],
-      "practiceQuestions": ["Question 1"],
-      "modelAnswer": "Concise answer"
+      "reason": "A detailed evidence-based explanation referencing the observed question patterns and, when available, years or repetitions",
+      "studyPlan": ["Specific concept to learn", "Specific application or comparison to practice", "Specific revision or self-test task"],
+      "practiceQuestions": ["A clear exam-style question", "A harder application or comparison question"],
+      "modelAnswer": "A well-structured exam-ready answer with a definition or introduction, key points, examples or steps where appropriate, and a concise conclusion",
+      "explanationModes": {
+        "beginner": "A thorough beginner-friendly explanation that starts with the basic idea, defines unfamiliar terms in plain language, explains how and why it works step by step, and includes an easy everyday or subject-specific example",
+        "examReady": "A moderately elaborate, technically accurate exam answer with an introduction or definition, organized key points, explanation of how it works, relevant examples, comparisons or steps where appropriate, and a concise conclusion",
+        "oneMinute": "A compact high-yield revision summary containing only the essential points",
+        "memoryTrick": "A memorable mnemonic, analogy, or association that helps recall the topic"
+      },
+      "resources": [{"title": "Resource title", "url": "https://...", "source": "Official documentation or reputable educational source"}]
     }
   ]
 }
 
 Rules:
-- Include only topics supported by the supplied questions.
-- Do not invent years or unsupported frequency counts.
-- Category A means higher historical priority, B medium, C lower.
-- These categories do not guarantee future exam questions.
-- Explain when evidence is insufficient.
-- Return valid JSON only, without Markdown code fences.
+- Include only topics, concepts, and question patterns supported by the supplied questions.
+- Group closely related questions under a precise topic instead of creating many duplicate topics.
+- Count frequency only when the same topic clearly appears more than once; otherwise use 1.
+- List a year only when it is explicitly present in the supplied material; otherwise return an empty array.
+- Category A means the strongest historical evidence or repetition, B means moderate evidence, and C means limited evidence. Do not treat categories as predictions or guarantees.
+- Prioritize accuracy over filling every field. If evidence is weak, say so in the reason.
+- Make every study-plan step actionable and specific to the subject.
+- Make model answers technically accurate, organized with headings or numbered points when useful, and detailed enough for exam preparation without inventing facts absent from the question.
+- Generate all four explanation modes for every topic. Make the beginner explanation patient and educational rather than merely short: assume the student has little prior knowledge, define terms, build the idea step by step, and include an easy example. Make the exam-ready answer moderately elaborate and structured enough for a strong written response, but avoid unnecessary padding. Keep the one-minute revision concise, and make the memory trick genuinely memorable and technically correct.
+- Add 2-3 genuinely relevant learning resources for each topic. Prefer official documentation, university resources, reputable educational sites, or well-known reference material. Never invent a URL; if no reliable direct URL is known, return an empty resources array.
+- Keep frequency numeric and all years as strings.
+- Return valid JSON only, without Markdown code fences or additional commentary.
+- Do not place literal line breaks inside JSON string values; use spaces or escaped newline characters instead.
 `;
 
         // 5. Call Ollama Cloud
@@ -289,13 +303,23 @@ Rules:
             .replace(/\s*```\s*$/, "")
             .trim();
 
+        // Some models add a short explanation or trailing commas even when
+        // JSON mode is enabled. Keep the parser tolerant without changing the
+        // response contract used by the frontend.
+        const jsonStart = cleanedContent.indexOf("{");
+        const jsonEnd = cleanedContent.lastIndexOf("}");
+        const jsonCandidate = jsonStart >= 0 && jsonEnd > jsonStart
+            ? cleanedContent.slice(jsonStart, jsonEnd + 1)
+            : cleanedContent;
+        const normalizedJson = jsonCandidate.replace(/,\s*([}\]])/g, "$1");
+
         let analysis: unknown;
 
         try {
-            analysis = JSON.parse(cleanedContent);
+            analysis = JSON.parse(normalizedJson);
         } catch {
-            const start = cleanedContent.indexOf("{");
-            const end = cleanedContent.lastIndexOf("}");
+            const start = normalizedJson.indexOf("{");
+            const end = normalizedJson.lastIndexOf("}");
 
             if (start === -1 || end <= start) {
                 console.error("Invalid AI JSON:", content);
@@ -308,7 +332,7 @@ Rules:
 
             try {
                 analysis = JSON.parse(
-                    cleanedContent.slice(start, end + 1)
+                    normalizedJson.slice(start, end + 1)
                 );
             } catch {
                 return NextResponse.json(

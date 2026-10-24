@@ -25,6 +25,13 @@ type Topic = {
   studyPlan: string[];
   practiceQuestions: string[];
   modelAnswer: string;
+  resources?: { title: string; url: string; source?: string }[];
+  explanationModes?: {
+    beginner: string;
+    examReady: string;
+    oneMinute: string;
+    memoryTrick: string;
+  };
 };
 
 type Analysis = {
@@ -43,6 +50,7 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [expandedAnswers, setExpandedAnswers] = useState<number[]>([]);
+  const [explanationMode, setExplanationMode] = useState<Record<number, string>>({});
   const [sourceText, setSourceText] = useState("");
   const [quiz, setQuiz] = useState<QuizQuestion[] | null>(null);
   const [quizLoading, setQuizLoading] = useState(false);
@@ -166,6 +174,16 @@ export default function Home() {
     setAnalysis(null);
     setError("");
     setExpandedAnswers([]);
+  }
+
+  function resourcesForTopic(topic: Topic) {
+    const validResources = topic.resources?.filter((resource) => resource.url.startsWith("https://"));
+    if (validResources?.length) return validResources;
+    const query = encodeURIComponent(`${subject.trim()} ${topic.name} tutorial`);
+    return [
+      { title: `Learn ${topic.name}`, url: `https://www.google.com/search?q=${query}`, source: "Web learning resources" },
+      { title: `${topic.name} video lessons`, url: `https://www.youtube.com/results?search_query=${query}`, source: "Video learning resources" },
+    ];
   }
 
   const priorityStyles = {
@@ -600,6 +618,36 @@ export default function Home() {
                   </div>
                 </div>
 
+                {resourcesForTopic(topic).length ? (
+                  <div className="mt-6 border-t border-slate-100 pt-5">
+                    <h4 className="text-sm font-semibold text-teal-700">
+                      Related learning resources
+                    </h4>
+                    <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                      {resourcesForTopic(topic).map((resource, resourceIndex) => (
+                        resource.url.startsWith("https://") && (
+                        <a
+                          key={`${resource.url}-${resourceIndex}`}
+                          href={resource.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="rounded-xl border border-slate-200 bg-slate-50 p-3 transition hover:border-emerald-300 hover:bg-emerald-50"
+                        >
+                          <span className="block text-sm font-semibold text-slate-800">
+                            {resource.title}
+                          </span>
+                          {resource.source && (
+                            <span className="mt-1 block text-xs text-slate-600">
+                              {resource.source}
+                            </span>
+                          )}
+                        </a>
+                        )
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
+
                 {/* Model Answer */}
                 <div className="mt-6 border-t border-white/[0.08] pt-5">
                   <button
@@ -608,7 +656,7 @@ export default function Home() {
                     aria-expanded={expandedAnswers.includes(index)}
                   >
                     <span className="text-sm font-semibold text-slate-700">
-                      View model answer
+                      Explain this topic
                     </span>
 
                     <ChevronDown
@@ -623,8 +671,31 @@ export default function Home() {
 
                   {expandedAnswers.includes(index) && (
                     <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
+                      <div className="mb-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                        {[
+                          ["beginner", "Beginner explanation"],
+                          ["examReady", "Exam-ready answer"],
+                          ["oneMinute", "One-minute revision"],
+                          ["memoryTrick", "Memory trick"],
+                        ].map(([mode, label]) => (
+                          <button
+                            key={mode}
+                            type="button"
+                            onClick={() => setExplanationMode({ ...explanationMode, [index]: mode })}
+                            className={`rounded-lg border px-3 py-2 text-xs font-semibold transition ${
+                              (explanationMode[index] ?? "examReady") === mode
+                                ? "border-emerald-400 bg-emerald-100 text-emerald-800"
+                                : "border-slate-200 bg-white text-slate-600 hover:border-emerald-300"
+                            }`}
+                          >
+                            {label}
+                          </button>
+                        ))}
+                      </div>
                       <p className="whitespace-pre-wrap text-sm leading-7 text-slate-700">
-                        {topic.modelAnswer ||
+                        {(topic.explanationModes?.[
+                          (explanationMode[index] ?? "examReady") as keyof NonNullable<Topic["explanationModes"]>
+                        ] ?? topic.modelAnswer) ||
                           "No model answer available."}
                       </p>
                     </div>
@@ -650,7 +721,7 @@ export default function Home() {
               </button>
             </div>
 
-            {quiz && <div className="space-y-4">{quiz.map((item, index) => <article key={index} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"><p className="font-medium text-slate-800">{index + 1}. {item.question}</p>{item.options.length > 0 ? <div className="mt-4 grid gap-2">{item.options.map((option, optionIndex) => <button key={optionIndex} type="button" onClick={() => !quizSubmitted && setQuizAnswers({ ...quizAnswers, [index]: String(optionIndex) })} className={`rounded-lg border p-3 text-left text-sm ${quizAnswers[index] === String(optionIndex) ? "border-emerald-400 bg-emerald-50" : "border-slate-200 bg-slate-50 text-slate-700"}`}>{option}</button>)}</div> : <input className="mt-4 w-full rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm text-slate-800" placeholder="Type your answer" onChange={(event) => setQuizAnswers({ ...quizAnswers, [index]: event.target.value })} />}{quizSubmitted && <p className="mt-3 text-sm text-slate-700">{typeof item.answer === "number" ? `Correct answer: ${item.options[item.answer]}. ` : `Ideal answer: ${item.answer}. `}{item.explanation}</p>}</article>)}<button type="button" onClick={() => setQuizSubmitted(true)} className="w-full rounded-xl bg-emerald-600 px-5 py-3 text-sm font-semibold text-white">Submit Answers</button></div>}
+            {quiz && <div className="space-y-4">{quiz.map((item, index) => <article key={index} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"><p className="font-medium text-slate-800">{index + 1}. {item.question}</p>{item.options.length > 0 ? <div className="mt-4 grid gap-2">{item.options.map((option, optionIndex) => { const selected = quizAnswers[index] === String(optionIndex); const correct = typeof item.answer === "number" && item.answer === optionIndex; const answerStyle = quizSubmitted && selected ? (correct ? "border-emerald-300 bg-emerald-100 text-emerald-900" : "border-rose-300 bg-rose-100 text-rose-900") : selected ? "border-emerald-400 bg-emerald-50" : "border-slate-200 bg-slate-50 text-slate-700"; return <button key={optionIndex} type="button" onClick={() => !quizSubmitted && setQuizAnswers({ ...quizAnswers, [index]: String(optionIndex) })} className={`rounded-lg border p-3 text-left text-sm ${answerStyle}`}>{option}</button>; })}</div> : <input disabled={quizSubmitted} className="mt-4 w-full rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm text-slate-800" placeholder="Type your answer" onChange={(event) => setQuizAnswers({ ...quizAnswers, [index]: event.target.value })} />}{quizSubmitted && <p className="mt-3 text-sm text-slate-700">{typeof item.answer === "number" ? `Correct answer: ${item.options[item.answer]}. ` : `Ideal answer: ${item.answer}. `}{item.explanation}</p>}</article>)}<button type="button" onClick={() => setQuizSubmitted(true)} className="w-full rounded-xl bg-emerald-600 px-5 py-3 text-sm font-semibold text-white">Submit Answers</button></div>}
 
             <div className="flex items-start gap-3 rounded-xl border border-amber-400/15 bg-amber-400/[0.04] p-4 text-xs leading-6 text-slate-400">
               <AlertCircle
