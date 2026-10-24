@@ -14,6 +14,24 @@ export async function POST(request: Request) {
     const file = formData.get("file");
     if (!(file instanceof File) || file.size === 0) return NextResponse.json({ error: "Please upload a PDF file." }, { status: 400 });
     if (file.size > 8 * 1024 * 1024) return NextResponse.json({ error: "PDF must be 8 MB or smaller." }, { status: 400 });
+
+    // Hosted OCR is much faster and more reliable on serverless deployments
+    // than starting Tesseract inside a Vercel function.
+    const ocrForm = new FormData();
+    ocrForm.append("apikey", process.env.OCR_SPACE_API_KEY || "helloworld");
+    ocrForm.append("language", "eng");
+    ocrForm.append("isOverlayRequired", "false");
+    ocrForm.append("OCREngine", "2");
+    ocrForm.append("file", new Blob([await file.arrayBuffer()], { type: "application/pdf" }), file.name);
+    const ocrResponse = await fetch("https://api.ocr.space/parse/image", { method: "POST", body: ocrForm, cache: "no-store" });
+    if (ocrResponse.ok) {
+      const ocrData = await ocrResponse.json();
+      const hostedText = (ocrData.ParsedResults ?? []).map((result: { ParsedText?: string }) => result.ParsedText || "").join("\n").trim();
+      if (hostedText.length >= 30) return NextResponse.json({ extractedText: hostedText.slice(0, 20000) });
+    }
+
+    // Fall back to local extraction for selectable PDFs or if the hosted
+    // service is temporarily unavailable.
     const loadingTask = getDocument({ data: new Uint8Array(await file.arrayBuffer()), useSystemFonts: true });
     const pdf = await loadingTask.promise;
     const pages: string[] = [];

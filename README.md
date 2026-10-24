@@ -83,6 +83,7 @@ Create `.env.local`:
 ```env
 OLLAMA_API_KEY=your_ollama_api_key
 OLLAMA_MODEL=your_model_name
+OCR_SPACE_API_KEY=your_ocr_space_api_key
 ```
 
 Start the app:
