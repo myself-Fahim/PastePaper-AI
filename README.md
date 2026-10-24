@@ -1,10 +1,10 @@
-# PastPaper AI
+# PastePaperAI
 
-PastPaper AI turns previous exam papers into a focused study plan, explanations, learning resources, and interactive practice quizzes.
+PastePaperAI turns previous exam papers into a focused study plan, explanations, learning resources, and interactive practice quizzes.
 
 ## What it solves
 
-Students often have past papers but no simple way to identify repeated topics, prioritize revision, understand difficult concepts, or measure their preparation. PastPaper AI analyzes past questions for a specific subject and converts them into practical study guidance.
+Students often have past papers but no simple way to identify repeated topics, prioritize revision, understand difficult concepts, or measure their preparation. PastePaperAI analyzes past questions for a specific subject and converts them into practical study guidance.
 
 ## Features
 
