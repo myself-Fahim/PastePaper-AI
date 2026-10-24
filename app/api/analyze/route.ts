@@ -23,6 +23,18 @@ GlobalWorkerOptions.workerSrc = pathToFileURL(
     )
 ).href;
 
+function subjectMatchesMaterial(subject: string, material: string): boolean {
+    const stopWords = new Set(["and", "the", "of", "for", "in", "on", "to"]);
+    const subjectWords = subject.toLowerCase().match(/[a-z0-9]+/g)?.filter(
+        (word) => word.length > 2 && !stopWords.has(word)
+    ) ?? [];
+    const materialWords = new Set(material.toLowerCase().match(/[a-z0-9]+/g) ?? []);
+
+    if (subjectWords.length === 0) return false;
+    const matchedWords = subjectWords.filter((word) => materialWords.has(word));
+    return matchedWords.length / subjectWords.length >= 0.5;
+}
+
 // Extract selectable text from a PDF buffer
 async function extractPdfText(buffer: Buffer): Promise<string> {
     const loadingTask = getDocument({
@@ -156,6 +168,15 @@ export async function POST(request: Request) {
                 {
                     error:
                         "Please upload a readable PDF or paste at least 30 characters of questions.",
+                },
+                { status: 400 }
+            );
+        }
+
+        if (!subjectMatchesMaterial(subject, extractedText)) {
+            return NextResponse.json(
+                {
+                    error: `The subject "${subject.trim()}" does not match the uploaded exam material. Please enter the correct subject.`,
                 },
                 { status: 400 }
             );

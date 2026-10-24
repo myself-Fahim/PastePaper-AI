@@ -31,6 +31,7 @@ type Analysis = {
   summary: string;
   topics: Topic[];
 };
+type QuizQuestion = { question: string; options: string[]; answer: number | string; explanation: string };
 
 export default function Home() {
   const [subject, setSubject] = useState(
@@ -42,6 +43,11 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [expandedAnswers, setExpandedAnswers] = useState<number[]>([]);
+  const [sourceText, setSourceText] = useState("");
+  const [quiz, setQuiz] = useState<QuizQuestion[] | null>(null);
+  const [quizLoading, setQuizLoading] = useState(false);
+  const [quizAnswers, setQuizAnswers] = useState<Record<number, string>>({});
+  const [quizSubmitted, setQuizSubmitted] = useState(false);
 
   function handleFileChange(selectedFile?: File) {
     setError("");
@@ -125,6 +131,7 @@ export default function Home() {
       }
 
       setAnalysis(data.analysis);
+      setSourceText(data.extractedText || questionText);
     } catch (err) {
       setError(
         err instanceof Error
@@ -134,6 +141,17 @@ export default function Home() {
     } finally {
       setLoading(false);
     }
+  }
+
+  async function generatePracticeQuiz() {
+    setQuizLoading(true); setError(""); setQuiz(null); setQuizSubmitted(false); setQuizAnswers({});
+    try {
+      const response = await fetch("/api/practice", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ subject: subject.trim(), sourceText }) });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Could not generate practice quiz.");
+      setQuiz(data.quiz.questions);
+    } catch (err) { setError(err instanceof Error ? err.message : "Could not generate practice quiz."); }
+    finally { setQuizLoading(false); }
   }
 
   function toggleAnswer(index: number) {
@@ -151,31 +169,31 @@ export default function Home() {
   }
 
   const priorityStyles = {
-    A: "border-rose-400/20 bg-rose-400/10 text-rose-300",
-    B: "border-amber-400/20 bg-amber-400/10 text-amber-300",
-    C: "border-emerald-400/20 bg-emerald-400/10 text-emerald-300",
+    A: "border-rose-200 bg-rose-50 text-rose-700",
+    B: "border-amber-200 bg-amber-50 text-amber-700",
+    C: "border-emerald-200 bg-emerald-50 text-emerald-700",
   };
 
   return (
-    <main className="min-h-screen bg-[#080B14] text-slate-100">
+    <main className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-cyan-50 text-slate-800 [&_.text-slate-200]:text-slate-700 [&_.text-slate-300]:text-slate-700 [&_.text-slate-400]:text-slate-600 [&_.text-slate-500]:text-slate-600 [&_.text-rose-200]:text-rose-700 [&_.text-rose-300]:text-rose-700 [&_.text-amber-300]:text-amber-700 [&_.text-emerald-300]:text-emerald-700 [&_.text-violet-300]:text-violet-700 [&_.text-violet-400]:text-violet-700 [&_.text-indigo-300]:text-indigo-700">
       {/* Navigation */}
-      <nav className="sticky top-0 z-20 border-b border-white/[0.08] bg-[#080B14]/90 backdrop-blur-xl">
+      <nav className="sticky top-0 z-20 border-b border-slate-200 bg-white/90 backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 sm:px-8">
           <button
             onClick={resetAnalysis}
             className="flex items-center gap-3"
             aria-label="Go to PastPaper AI home"
           >
-            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-500 text-white shadow-lg shadow-violet-500/20">
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500 text-white shadow-lg shadow-emerald-500/20">
               <BookOpen size={22} />
             </span>
             <span className="text-lg font-bold tracking-tight">
-              PastPaper <span className="text-violet-400">AI</span>
+              PastPaper <span className="text-emerald-600">AI</span>
             </span>
           </button>
 
-          <div className="hidden items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-xs text-slate-300 sm:flex">
-            <span className="h-2 w-2 rounded-full bg-emerald-400" />
+          <div className="hidden items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-xs text-emerald-700 sm:flex">
+            <span className="h-2 w-2 rounded-full bg-emerald-500" />
             AI Study Assistant
           </div>
         </div>
@@ -186,32 +204,32 @@ export default function Home() {
         <div className="pointer-events-none absolute left-1/2 top-0 h-72 w-96 -translate-x-1/2 rounded-full bg-violet-600/10 blur-[100px]" />
 
         <div className="relative mx-auto max-w-4xl text-center">
-          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-violet-400/20 bg-violet-400/[0.07] px-4 py-2 text-xs font-medium text-violet-300">
+          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-xs font-medium text-emerald-700">
             <Sparkles size={14} />
             STUDY SMARTER WITH AI
           </div>
 
           <h1 className="text-4xl font-bold leading-tight tracking-tight sm:text-6xl">
             Turn past papers into
-            <span className="mt-2 block bg-gradient-to-r from-violet-400 via-fuchsia-300 to-indigo-400 bg-clip-text text-transparent">
+            <span className="mt-2 block bg-gradient-to-r from-emerald-600 via-teal-500 to-cyan-600 bg-clip-text text-transparent">
               your study strategy.
             </span>
           </h1>
 
-          <p className="mx-auto mt-6 max-w-2xl text-sm leading-7 text-slate-400 sm:text-base">
+          <p className="mx-auto mt-6 max-w-2xl text-sm leading-7 text-slate-600 sm:text-base">
             Upload previous exam papers or paste questions. Discover
             recurring topics, understand what to prioritize, and get
             a personalized path to exam preparation.
           </p>
 
-          <div className="mt-7 flex flex-wrap justify-center gap-3 text-xs text-slate-400">
-            <span className="flex items-center gap-2 rounded-full border border-white/10 px-3 py-2">
+          <div className="mt-7 flex flex-wrap justify-center gap-3 text-xs text-slate-600">
+            <span className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 shadow-sm">
               <FileText size={14} /> PDF & text
             </span>
-            <span className="flex items-center gap-2 rounded-full border border-white/10 px-3 py-2">
+            <span className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 shadow-sm">
               <Brain size={14} /> AI topic analysis
             </span>
-            <span className="flex items-center gap-2 rounded-full border border-white/10 px-3 py-2">
+            <span className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 shadow-sm">
               <GraduationCap size={14} /> Study planning
             </span>
           </div>
@@ -220,9 +238,9 @@ export default function Home() {
 
       <div className="mx-auto max-w-5xl px-5 pb-20 sm:px-8">
         {/* Input Form */}
-        <section className="rounded-3xl border border-white/10 bg-[#101522] p-5 shadow-2xl shadow-black/20 sm:p-8">
+        <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-xl shadow-slate-200/60 sm:p-8">
           <div className="mb-7 flex items-start gap-4">
-            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-violet-400/20 bg-violet-400/10 text-violet-300">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-600">
               <FileText size={21} />
             </span>
 
@@ -230,7 +248,7 @@ export default function Home() {
               <h2 className="text-xl font-semibold">
                 Analyze your past papers
               </h2>
-              <p className="mt-1 text-sm leading-6 text-slate-400">
+              <p className="mt-1 text-sm leading-6 text-slate-600">
                 Add your subject and upload a PDF or paste exam questions.
               </p>
             </div>
@@ -241,7 +259,7 @@ export default function Home() {
             <div>
               <label
                 htmlFor="subject"
-                className="mb-2 block text-sm font-medium text-slate-200"
+                className="mb-2 block text-sm font-medium text-slate-700"
               >
                 Subject name
               </label>
@@ -250,15 +268,15 @@ export default function Home() {
                 id="subject"
                 value={subject}
                 onChange={(event) => setSubject(event.target.value)}
-                className="w-full rounded-xl border border-white/10 bg-[#090D17] px-4 py-3.5 text-sm outline-none transition placeholder:text-slate-600 focus:border-violet-400/60 focus:ring-2 focus:ring-violet-400/10"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-sm outline-none transition focus:border-emerald-400 focus:bg-white focus:ring-2 focus:ring-emerald-400/10"
               />
             </div>
 
             {/* PDF Upload */}
             <div>
-              <label className="mb-2 block text-sm font-medium text-slate-200">
+              <label className="mb-2 block text-sm font-medium text-slate-700">
                 Upload exam papers
-                <span className="ml-2 font-normal text-slate-500">
+                <span className="ml-2 font-normal text-slate-600">
                   (Optional)
                 </span>
               </label>
@@ -267,7 +285,7 @@ export default function Home() {
                 className={`flex cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed px-5 py-8 text-center transition ${
                   file
                     ? "border-violet-400/50 bg-violet-400/[0.06]"
-                    : "border-white/15 bg-[#090D17] hover:border-violet-400/40 hover:bg-violet-400/[0.03]"
+                    : "border-slate-300 bg-slate-50 hover:border-emerald-400 hover:bg-emerald-50/50"
                 }`}
               >
                 {file ? (
@@ -290,7 +308,7 @@ export default function Home() {
                       <Upload size={23} />
                     </span>
 
-                    <span className="text-sm font-medium text-slate-200">
+                    <span className="text-sm font-medium text-slate-700">
                       Click to upload a PDF
                     </span>
 
@@ -314,14 +332,14 @@ export default function Home() {
                 <button
                   type="button"
                   onClick={() => setFile(null)}
-                  className="mt-3 inline-flex items-center gap-2 text-xs text-slate-400 transition hover:text-rose-300"
+                  className="mt-3 inline-flex items-center gap-2 text-xs text-slate-600 transition hover:text-rose-500"
                 >
                   <X size={14} />
                   Remove PDF
                 </button>
               )}
 
-              <p className="mt-2 text-xs leading-5 text-slate-500">
+              <p className="mt-2 text-xs leading-5 text-slate-600">
                 Text-based PDFs work best. Scanned image-only PDFs
                 may require OCR.
               </p>
@@ -332,7 +350,7 @@ export default function Home() {
               <div className="mb-2 flex items-center justify-between gap-3">
                 <label
                   htmlFor="questions"
-                  className="text-sm font-medium text-slate-200"
+                className="text-sm font-medium text-slate-700"
                 >
                   Paste exam questions
                 </label>
@@ -342,7 +360,7 @@ export default function Home() {
                 </span>
               </div>
 
-              <p className="mb-2 text-xs text-slate-500">
+              <p className="mb-2 text-xs text-slate-600">
                 Paste exam questions here, or upload a PDF above.
               </p>
 
@@ -353,10 +371,10 @@ export default function Home() {
                   setQuestionText(event.target.value)
                 }
                 rows={9}
-                className="w-full resize-y rounded-xl border border-white/10 bg-[#090D17] px-4 py-4 text-sm leading-7 outline-none transition placeholder:text-slate-600 focus:border-violet-400/60 focus:ring-2 focus:ring-violet-400/10"
+                className="w-full resize-y rounded-xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm leading-7 outline-none transition focus:border-emerald-400 focus:bg-white focus:ring-2 focus:ring-emerald-400/10"
               />
 
-              <p className="mt-2 text-xs text-slate-500">
+              <p className="mt-2 text-xs text-slate-600">
                 Include exam years if available so the AI can use
                 them as evidence.
               </p>
@@ -366,7 +384,7 @@ export default function Home() {
             {error && (
               <div
                 role="alert"
-                className="flex items-start gap-3 rounded-xl border border-rose-400/20 bg-rose-400/[0.07] p-4 text-sm text-rose-200"
+                className="flex items-start gap-3 rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm font-medium text-rose-700"
               >
                 <AlertCircle
                   size={19}
@@ -385,7 +403,7 @@ export default function Home() {
                 !subject.trim() ||
                 (!file && questionText.trim().length < 30)
               }
-              className="flex w-full items-center justify-center gap-3 rounded-xl bg-violet-600 px-5 py-4 text-sm font-semibold text-white shadow-lg shadow-violet-600/20 transition hover:bg-violet-500 disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex w-full items-center justify-center gap-3 rounded-xl bg-emerald-600 px-5 py-4 text-sm font-semibold text-white shadow-lg shadow-emerald-600/20 transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {loading ? (
                 <>
@@ -429,14 +447,14 @@ export default function Home() {
                   Your study insights
                 </h2>
 
-                <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-400">
+                <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-600">
                   {analysis.summary}
                 </p>
               </div>
 
               <button
                 onClick={resetAnalysis}
-                className="shrink-0 rounded-xl border border-white/10 px-4 py-2.5 text-sm text-slate-300 transition hover:bg-white/[0.05]"
+                className="shrink-0 rounded-xl border border-slate-200 px-4 py-2.5 text-sm text-slate-700 transition hover:bg-slate-50"
               >
                 New analysis
               </button>
@@ -444,7 +462,7 @@ export default function Home() {
 
             {/* Summary Cards */}
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-              <div className="rounded-2xl border border-white/10 bg-[#101522] p-5">
+              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                 <span className="text-sm text-slate-400">
                   Topics identified
                 </span>
@@ -453,7 +471,7 @@ export default function Home() {
                 </p>
               </div>
 
-              <div className="rounded-2xl border border-white/10 bg-[#101522] p-5">
+              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                 <span className="text-sm text-slate-400">
                   High priority
                 </span>
@@ -466,7 +484,7 @@ export default function Home() {
                 </p>
               </div>
 
-              <div className="rounded-2xl border border-white/10 bg-[#101522] p-5">
+              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                 <span className="text-sm text-slate-400">
                   Other topics
                 </span>
@@ -484,7 +502,7 @@ export default function Home() {
             {analysis.topics.map((topic, index) => (
               <article
                 key={`${topic.name}-${index}`}
-                className="rounded-2xl border border-white/10 bg-[#101522] p-5 sm:p-7"
+                className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7"
               >
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div className="flex min-w-0 flex-1 items-start gap-4">
@@ -518,8 +536,8 @@ export default function Home() {
                   </span>
                 </div>
 
-                <div className="mt-6 rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
-                  <p className="text-sm leading-7 text-slate-300">
+                <div className="mt-6 rounded-xl border border-slate-100 bg-slate-50 p-4">
+                  <p className="text-sm leading-7 text-slate-700">
                     {topic.reason}
                   </p>
                 </div>
@@ -589,7 +607,7 @@ export default function Home() {
                     className="flex w-full items-center justify-between gap-4 text-left"
                     aria-expanded={expandedAnswers.includes(index)}
                   >
-                    <span className="text-sm font-semibold text-slate-200">
+                    <span className="text-sm font-semibold text-slate-700">
                       View model answer
                     </span>
 
@@ -604,8 +622,8 @@ export default function Home() {
                   </button>
 
                   {expandedAnswers.includes(index) && (
-                    <div className="mt-4 rounded-xl border border-white/[0.06] bg-[#090D17] p-4">
-                      <p className="whitespace-pre-wrap text-sm leading-7 text-slate-300">
+                    <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
+                      <p className="whitespace-pre-wrap text-sm leading-7 text-slate-700">
                         {topic.modelAnswer ||
                           "No model answer available."}
                       </p>
@@ -616,12 +634,23 @@ export default function Home() {
             ))}
 
             {analysis.topics.length === 0 && (
-              <div className="rounded-2xl border border-white/10 bg-[#101522] p-8 text-center">
+              <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center">
                 <p className="text-slate-300">
                   No topics were identified. Try adding more exam questions.
                 </p>
               </div>
             )}
+
+            <div className="rounded-2xl border border-emerald-200 bg-white p-6 shadow-sm">
+              <h3 className="text-lg font-semibold text-slate-800">Ready to test your knowledge?</h3>
+              <p className="mt-2 text-sm text-slate-600">Generate a subject-specific practice quiz from these past-paper topics.</p>
+              <button type="button" onClick={generatePracticeQuiz} disabled={quizLoading} className="mt-5 flex w-full items-center justify-center gap-3 rounded-xl bg-emerald-600 px-5 py-4 text-sm font-semibold text-white shadow-lg shadow-emerald-600/20 transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-50">
+                {quizLoading ? <LoaderCircle size={17} className="animate-spin" /> : <GraduationCap size={17} />}
+                {quizLoading ? "Generating practice quiz..." : "Generate Practice Quiz"}
+              </button>
+            </div>
+
+            {quiz && <div className="space-y-4">{quiz.map((item, index) => <article key={index} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"><p className="font-medium text-slate-800">{index + 1}. {item.question}</p>{item.options.length > 0 ? <div className="mt-4 grid gap-2">{item.options.map((option, optionIndex) => <button key={optionIndex} type="button" onClick={() => !quizSubmitted && setQuizAnswers({ ...quizAnswers, [index]: String(optionIndex) })} className={`rounded-lg border p-3 text-left text-sm ${quizAnswers[index] === String(optionIndex) ? "border-emerald-400 bg-emerald-50" : "border-slate-200 bg-slate-50 text-slate-700"}`}>{option}</button>)}</div> : <input className="mt-4 w-full rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm text-slate-800" placeholder="Type your answer" onChange={(event) => setQuizAnswers({ ...quizAnswers, [index]: event.target.value })} />}{quizSubmitted && <p className="mt-3 text-sm text-slate-700">{typeof item.answer === "number" ? `Correct answer: ${item.options[item.answer]}. ` : `Ideal answer: ${item.answer}. `}{item.explanation}</p>}</article>)}<button type="button" onClick={() => setQuizSubmitted(true)} className="w-full rounded-xl bg-emerald-600 px-5 py-3 text-sm font-semibold text-white">Submit Answers</button></div>}
 
             <div className="flex items-start gap-3 rounded-xl border border-amber-400/15 bg-amber-400/[0.04] p-4 text-xs leading-6 text-slate-400">
               <AlertCircle
@@ -640,8 +669,8 @@ export default function Home() {
       </div>
 
       {/* Footer */}
-      <footer className="border-t border-white/[0.08] px-5 py-7 text-center">
-        <p className="text-sm font-semibold text-slate-300">
+      <footer className="border-t border-slate-200 bg-white px-5 py-7 text-center">
+        <p className="text-sm font-semibold text-slate-700">
           PastPaper <span className="text-violet-400">AI</span>
         </p>
         <p className="mt-2 text-xs text-slate-500">
