@@ -2,6 +2,8 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   /* config options here */
+  // Keep native PDF/OCR dependencies out of Turbopack's ESM chunks.
+  serverExternalPackages: ["@napi-rs/canvas", "tesseract.js"],
   experimental: {
     agentFeedback: true,
   },
